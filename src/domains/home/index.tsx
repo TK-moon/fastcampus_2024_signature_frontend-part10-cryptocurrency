@@ -7,19 +7,40 @@ import {
   TickerListHandlerResult,
 } from "@/api/cryptocurrency/ticker/types";
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
-import { FC } from "react";
-import { formatNumber } from "./utils";
+import { FC, useState } from "react";
+import { formatNumber, sortByName, sortByVolume } from "./utils";
+import { api_getSavedTickerList } from "./api";
+import { SaveButton } from "./SaveButton";
+
+type SortType = "volume" | "name";
+export const DEFAULT_SORT = "volume";
 
 interface Props {}
 
 const HomeMain: FC<Props> = () => {
-  const { data: list } = useQuery(getTickerListQueryOptions());
+  /**
+   * 정렬기준
+   * 1. 거래 금액순
+   * 2. 이름순
+   */
+  const [sort_by, setSortBy] = useState<SortType>(DEFAULT_SORT);
+  const { data: list } = useQuery(getTickerListQueryOptions({ sort_by }));
   const { data: map } = useQuery(getCurrencyListQueryOptions());
+  const { data: saved_set, refetch } = useQuery(
+    getSavedTickerSetQueryOptions()
+  );
 
-  console.log(list, map);
+  console.log(saved_set);
 
   return (
     <main>
+      <header>
+        <h1>암호화폐 목록</h1>
+        <div>
+          <button onClick={() => setSortBy("volume")}>거래금액순</button>
+          <button onClick={() => setSortBy("name")}>이름순</button>
+        </div>
+      </header>
       <section>
         <ol>
           {list?.map((item) => {
@@ -43,6 +64,11 @@ const HomeMain: FC<Props> = () => {
                 <br />
                 <span>{formatNumber(item.target_volume, 0)}</span>
                 <br />
+                <SaveButton
+                  ticker={ticker}
+                  is_saved={!!saved_set?.has(ticker)}
+                />
+                <br />
                 <br />
               </li>
             );
@@ -55,16 +81,16 @@ const HomeMain: FC<Props> = () => {
 
 export { HomeMain };
 
-type TickerListResponse = Extract<
+export type TickerListResponse = Extract<
   TickerListHandlerResult,
   GetTickerListReturnType
 >;
 
-export function getTickerListQueryOptions(): UseQueryOptions<
-  TickerListResponse,
-  Error,
-  TickerListResponse["tickers"]
-> {
+export function getTickerListQueryOptions(params: {
+  sort_by: SortType;
+}): UseQueryOptions<TickerListResponse, Error, TickerListResponse["tickers"]> {
+  const { sort_by } = params;
+
   return {
     queryKey: ["ticker-list"],
     queryFn: async () => {
@@ -75,7 +101,11 @@ export function getTickerListQueryOptions(): UseQueryOptions<
       return data;
     },
     select: (data) => {
-      return data.tickers;
+      const sorted_list =
+        sort_by === "volume"
+          ? sortByVolume(data.tickers)
+          : sortByName(data.tickers);
+      return sorted_list;
     },
   };
 }
@@ -105,6 +135,25 @@ export function getCurrencyListQueryOptions(): UseQueryOptions<
           return [currency.symbol, currency];
         })
       );
+    },
+  };
+}
+
+export const SAVED_TICKER_LIST_KEY = ["saved-ticker-list"];
+
+function getSavedTickerSetQueryOptions(): UseQueryOptions<
+  string[],
+  Error,
+  Set<string>
+> {
+  return {
+    queryKey: SAVED_TICKER_LIST_KEY,
+    queryFn: async () => {
+      const result = await api_getSavedTickerList();
+      return result;
+    },
+    select: (data) => {
+      return new Set(data);
     },
   };
 }

@@ -1,4 +1,5 @@
 import {
+  DEFAULT_SORT,
   getCurrencyListQueryOptions,
   getTickerListQueryOptions,
   HomeMain,
@@ -21,7 +22,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async () => {
   const query_client = getQueryClient();
 
   const query_option_list: UseQueryOptions<any, Error>[] = [
-    getTickerListQueryOptions(),
+    getTickerListQueryOptions({ sort_by: DEFAULT_SORT }),
     getCurrencyListQueryOptions(),
   ];
 
