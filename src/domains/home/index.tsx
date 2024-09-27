@@ -11,6 +11,7 @@ import { FC, useState } from "react";
 import { formatNumber, sortByName, sortByVolume } from "./utils";
 import { api_getSavedTickerList } from "./api";
 import { SaveButton } from "./SaveButton";
+import Link from "next/link";
 
 type SortType = "volume" | "name";
 export const DEFAULT_SORT = "volume";
@@ -51,25 +52,27 @@ const HomeMain: FC<Props> = () => {
 
             return (
               <li key={`${item.target_currency}-${item.id}`}>
-                <span>{ticker}</span>
-                <span>{map?.get(ticker)?.name}</span>
-                <br />
-                <span>{formatNumber(item.last)}</span>
-                <br />
-                <span>{rate.toFixed(2)}%</span>
-                <br />
-                <span>{diff.toFixed(2)}</span>
-                <br />
-                <span>{formatNumber(item.quote_volume, 0)}</span>
-                <br />
-                <span>{formatNumber(item.target_volume, 0)}</span>
-                <br />
-                <SaveButton
-                  ticker={ticker}
-                  is_saved={!!saved_set?.has(ticker)}
-                />
-                <br />
-                <br />
+                <Link href={`/${ticker}`}>
+                  <span>{ticker}</span>
+                  <span>{map?.get(ticker)?.name}</span>
+                  <br />
+                  <span>{formatNumber(item.last)}</span>
+                  <br />
+                  <span>{rate.toFixed(2)}%</span>
+                  <br />
+                  <span>{diff.toFixed(2)}</span>
+                  <br />
+                  <span>{formatNumber(item.quote_volume, 0)}</span>
+                  <br />
+                  <span>{formatNumber(item.target_volume, 0)}</span>
+                  <br />
+                  <SaveButton
+                    ticker={ticker}
+                    is_saved={!!saved_set?.has(ticker)}
+                  />
+                  <br />
+                  <br />
+                </Link>
               </li>
             );
           })}
