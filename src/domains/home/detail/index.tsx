@@ -3,7 +3,7 @@ import {
   TickerInfoHandlerResult,
 } from "@/api/cryptocurrency/ticker/detail/types";
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
-import { ChangeEventHandler, FC, useState } from "react";
+import { ChangeEventHandler, FC, useMemo, useRef, useState } from "react";
 import { formatNumber } from "../utils";
 import {
   ChartHandlerResult,
@@ -12,6 +12,9 @@ import {
 } from "@/api/cryptocurrency/chart/types";
 import dayjs from "dayjs";
 import { useRouter } from "next/router";
+import { formatChartData } from "./utils";
+import { useChart } from "./useChart";
+import { useResizeObserver } from "./useResizeObserver";
 
 export type Interval = (typeof INTERVAL_LIST)[number];
 
@@ -25,6 +28,8 @@ const CryptoCurrencyDetailMain: FC<Props> = (props) => {
 
   const router = useRouter();
 
+  const chart_ref = useRef<HTMLDivElement>(null);
+
   const [interval, setInterval] = useState<Interval>(
     interval_for_initialize ?? INTERVAL_LIST[0]
   );
@@ -33,6 +38,17 @@ const CryptoCurrencyDetailMain: FC<Props> = (props) => {
   const { data: chart } = useQuery(
     getCandleChartQueryOptions({ ticker, interval })
   );
+
+  const chart_data = useMemo(() => formatChartData(chart), [chart]);
+
+  const { draw } = useChart({ chart_data });
+
+  useResizeObserver({
+    ref: chart_ref,
+    callback: (entry) => {
+      draw(entry.target);
+    },
+  });
 
   const handleChangeInterval: ChangeEventHandler<HTMLInputElement> = (
     event
@@ -47,6 +63,7 @@ const CryptoCurrencyDetailMain: FC<Props> = (props) => {
 
   return (
     <main>
+      <div ref={chart_ref} style={{ height: 500 }} />
       <ol>
         {INTERVAL_LIST.map((item) => {
           return (
@@ -106,7 +123,7 @@ interface GetCandleChartQueryOptionParams {
   interval: Interval;
 }
 
-type GetCandleChartResponse = Extract<
+export type GetCandleChartResponse = Extract<
   ChartHandlerResult,
   GetCandleChartReturnType
 >;
