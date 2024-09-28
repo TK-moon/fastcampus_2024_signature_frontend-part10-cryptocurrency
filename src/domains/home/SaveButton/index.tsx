@@ -2,6 +2,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ComponentProps, FC, MouseEventHandler } from "react";
 import { api_removeTicker, api_saveTicker } from "../api";
 import { SAVED_TICKER_LIST_KEY } from "..";
+import star_filled from "./star_filled.svg";
+import star_outlined from "./star_outlined.svg";
+import Image from "next/image";
 
 interface Props extends ComponentProps<"button"> {
   ticker: string;
@@ -42,7 +45,10 @@ const SaveButton: FC<Props> = (props) => {
 
   return (
     <button onClick={handleClick} {...rest}>
-      {is_saved ? "저장 해제" : "저장"}
+      <Image
+        src={is_saved ? star_filled : star_outlined}
+        alt={is_saved ? "저장됨" : "저장안됨"}
+      />
     </button>
   );
 };

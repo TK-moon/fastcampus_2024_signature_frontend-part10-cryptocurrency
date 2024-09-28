@@ -15,6 +15,7 @@ import { useRouter } from "next/router";
 import { formatChartData } from "./utils";
 import { useChart } from "./useChart";
 import { useResizeObserver } from "./useResizeObserver";
+import styles from "./index.module.css";
 
 export type Interval = (typeof INTERVAL_LIST)[number];
 
@@ -63,11 +64,14 @@ const CryptoCurrencyDetailMain: FC<Props> = (props) => {
 
   return (
     <main>
+      <header className={styles.header}>
+        <h1 className={styles.title}>{ticker}</h1>
+      </header>
       <div ref={chart_ref} style={{ height: 500 }} />
-      <ol>
+      <ol className={styles.interval_group}>
         {INTERVAL_LIST.map((item) => {
           return (
-            <li key={`interval-item-${item}`}>
+            <li key={`interval-item-${item}`} className={styles.interval_item}>
               <label>
                 <input
                   type="radio"
@@ -82,7 +86,7 @@ const CryptoCurrencyDetailMain: FC<Props> = (props) => {
           );
         })}
       </ol>
-      <section>
+      <section className={styles.info_section}>
         <dl>
           <dt>티커</dt>
           <dd>{ticker_info?.target_currency.toUpperCase()}</dd>

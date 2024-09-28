@@ -12,6 +12,11 @@ import { formatNumber, sortByName, sortByVolume } from "./utils";
 import { api_getSavedTickerList } from "./api";
 import { SaveButton } from "./SaveButton";
 import Link from "next/link";
+import styles from "./index.module.css";
+import increase from "./increase.svg";
+import decrease from "./decrease.svg";
+import same from "./same.svg";
+import Image from "next/image";
 
 type SortType = "volume" | "name";
 export const DEFAULT_SORT = "volume";
@@ -27,51 +32,84 @@ const HomeMain: FC<Props> = () => {
   const [sort_by, setSortBy] = useState<SortType>(DEFAULT_SORT);
   const { data: list } = useQuery(getTickerListQueryOptions({ sort_by }));
   const { data: map } = useQuery(getCurrencyListQueryOptions());
-  const { data: saved_set, refetch } = useQuery(
-    getSavedTickerSetQueryOptions()
-  );
-
-  console.log(saved_set);
+  const { data: saved_set } = useQuery(getSavedTickerSetQueryOptions());
 
   return (
-    <main>
-      <header>
-        <h1>암호화폐 목록</h1>
-        <div>
-          <button onClick={() => setSortBy("volume")}>거래금액순</button>
-          <button onClick={() => setSortBy("name")}>이름순</button>
+    <main className={styles.container}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>암호화폐 목록</h1>
+        <div className={styles.sort_button_group}>
+          <button
+            className={sort_by === "volume" ? "font-extrabold" : ""}
+            onClick={() => setSortBy("volume")}
+          >
+            거래금액순
+          </button>
+          <button
+            className={sort_by === "name" ? "font-extrabold" : ""}
+            onClick={() => setSortBy("name")}
+          >
+            이름순
+          </button>
         </div>
       </header>
       <section>
-        <ol>
+        <ol className={styles.item_list}>
           {list?.map((item) => {
             const ticker = item.target_currency.toUpperCase();
 
             const diff = item.last - item.first;
             const rate = ((item.last - item.first) / item.first) * 100;
 
+            const status = getIncreaseStatus(diff);
+            const color_classname = getPriceColorByStatus(status);
+
             return (
               <li key={`${item.target_currency}-${item.id}`}>
-                <Link href={`/${ticker}`}>
-                  <span>{ticker}</span>
-                  <span>{map?.get(ticker)?.name}</span>
-                  <br />
-                  <span>{formatNumber(item.last)}</span>
-                  <br />
-                  <span>{rate.toFixed(2)}%</span>
-                  <br />
-                  <span>{diff.toFixed(2)}</span>
-                  <br />
-                  <span>{formatNumber(item.quote_volume, 0)}</span>
-                  <br />
-                  <span>{formatNumber(item.target_volume, 0)}</span>
-                  <br />
+                <Link href={`/${ticker}`} className={styles.item}>
+                  <span className="row-start-1 row-end-3 self-center">
+                    {status === "increase" && (
+                      <Image src={increase} alt="상승 아이콘" />
+                    )}
+                    {status === "decrease" && (
+                      <Image src={decrease} alt="하락 아이콘" />
+                    )}
+                    {status === "same" && (
+                      <Image src={same} alt="변동 없음 아이콘" />
+                    )}
+                  </span>
+                  <span className="col-start-2 col-end-3 text-[14px]">
+                    {ticker}
+                  </span>
+                  <span className="col-start-2 col-end-3 text-[14px]">
+                    {map?.get(ticker)?.name}
+                  </span>
+                  <span
+                    className={`col-start-3 col-end-4 row-start-1 row-end-3  text-[16px] font-bold ${color_classname}`}
+                  >
+                    {formatNumber(item.last)}
+                  </span>
+                  <span
+                    className={`col-start-4 col-end-5 row-start-1 row-end-2 text-[14px] ${color_classname}`}
+                  >
+                    {rate.toFixed(2)}%
+                  </span>
+                  <span
+                    className={`col-start-4 col-end-5 row-start-2 row-end-3 text-[12px] ${color_classname}`}
+                  >
+                    {diff.toFixed(2)}
+                  </span>
+                  <span className="col-start-5 col-end-6 row-start-1 row-end-2 text-[14px] text-right">
+                    {formatNumber(item.quote_volume, 0)}
+                  </span>
+                  <span className="col-start-5 col-end-6 row-start-2 row-end-3 text-[12px] text-right">
+                    {formatNumber(item.target_volume, 0)}
+                  </span>
                   <SaveButton
                     ticker={ticker}
                     is_saved={!!saved_set?.has(ticker)}
+                    className="col-start-6 col-end-7 row-start-1 row-end-3"
                   />
-                  <br />
-                  <br />
                 </Link>
               </li>
             );
@@ -159,4 +197,27 @@ function getSavedTickerSetQueryOptions(): UseQueryOptions<
       return new Set(data);
     },
   };
+}
+
+function getIncreaseStatus(diff: number) {
+  if (diff > 0) {
+    return "increase";
+  }
+
+  if (diff < 0) {
+    return "decrease";
+  }
+
+  return "same";
+}
+
+function getPriceColorByStatus(status: ReturnType<typeof getIncreaseStatus>) {
+  if (status === "increase") {
+    return "text-red-500";
+  }
+  if (status === "decrease") {
+    return "text-blue-500";
+  }
+
+  return "text-gray-500";
 }

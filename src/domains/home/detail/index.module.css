@@ -1,0 +1,55 @@
+.header {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.interval_group {
+  display: flex;
+  overflow: auto;
+  padding: 5px 10px;
+  font-size: 14px;
+  justify-content: center;
+}
+
+.interval_item {
+  display: block;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+.interval_item:not(:last-child) {
+  border-right: 1px solid #efefef;
+}
+
+.interval_item input[type="radio"] {
+  display: none;
+}
+
+.info_section {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  row-gap: 5px;
+}
+
+.info_section > dl {
+  display: flex;
+  column-gap: 5px;
+  align-items: center;
+}
+
+.info_section > dl > dt {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.info_section > dl > dd {
+  font-size: 16px;
+  color: #545454;
+}
